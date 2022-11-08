@@ -1,0 +1,89 @@
+   86  2022-11-08 13:13:44 fdisk -l
+   87  2022-11-08 13:14:05 pvcreate /dev/sdb
+   88  2022-11-08 13:14:17 vgs
+   89  2022-11-08 13:14:22 pvs
+   90  2022-11-08 13:15:05 vgextend vg_dev /dev/sdb
+   91  2022-11-08 13:15:09 pvs
+   92  2022-11-08 13:15:25 lvs
+   93  2022-11-08 13:16:07 lvextend --help
+   94  2022-11-08 13:16:53 df -h
+   95  2022-11-08 13:17:01 echo /dev/mapper/vg_dev-lv_root
+   96  2022-11-08 13:17:35 lvextend -l +100%FREE /dev/mapper/vg_dev-lv_root
+   97  2022-11-08 13:17:49 lvs
+   98  2022-11-08 13:18:59 df -h
+   99  2022-11-08 13:19:28 lvresize -r -l +100%FREE /dev/mapper/vg_dev-lv_root
+  100  2022-11-08 13:19:32 lvs
+  101  2022-11-08 13:19:35 df -h
+
+
+
+if fdisk -l shows nothing:
+hosts=`ls /sys/class/scsi_host` && for i in $hosts; do echo "- - -" > /sys/class/scsi_host/$i/scan; done
+
+
+- Extend FS "/"
+resize2fs -p /dev/mapper/vg_dev-lv_root
+df -h
+ 
+or 
+lvresize -r -l +100%FREE /dev/mapper/vg_dev-lv_root
+
+
+
+---------------------------------------------------------------------------------------------------------------
+
+[TEST][root@webtest11 ~]# fdisk /dev/sda 
+Welcome to fdisk (util-linux 2.23.2).
+ 
+Changes will remain in memory only, until you decide to write them.
+Be careful before using the write command.
+ 
+Command (m for help): p
+ 
+Disk /dev/sda: 26.8 GB, 26843545600 bytes, 52428800 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk label type: dos
+Disk identifier: 0x000c24c5
+ 
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1   *        2048     1050623      524288   83  Linux
+/dev/sda2         1050624    41943039    20446208   8e  Linux LVM
+ 
+
+Command (m for help): n
+Partition type:
+   p   primary (2 primary, 0 extended, 2 free)
+   e   extended
+Select (default p): p
+Partition number (3,4, default 3): 
+First sector (41943040-52428799, default 41943040): 
+Using default value 41943040
+Last sector, +sectors or +size{K,M,G} (41943040-52428799, default 52428799): 
+Using default value 52428799
+Partition 3 of type Linux and of size 5 GiB is set
+ 
+Command (m for help): w
+The partition table has been altered!
+ 
+ 
+ 
+ 
+
+[TEST][root@webtest11 ~]# fdisk -l
+ 
+Disk /dev/sda: 26.8 GB, 26843545600 bytes, 5242880    dev-kube-worker-2.dev.ict    Free disk space is less than 20% on volume /    3d 15h 28m    No0 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk label type: dos
+Disk identifier: 0x000c24c5
+ 
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1   *        2048     1050623      524288   83  Linux
+/dev/sda2         1050624    41943039    20446208   8e  Linux LVM
+/dev/sda3        41943040    52428799     5242880   83  Linux
+ 
+
+[TEST][root@webtest11 ~]# pvcreate /dev/sda3
